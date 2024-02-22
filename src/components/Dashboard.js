@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { firestore, auth, singInWithGoogle } from "../config/firebase.config";
 import { onAuthStateChanged } from "firebase/auth";
-import { getDoc, doc, getDocs, collection, setDoc, addDoc } from "firebase/firestore";
+import { getDoc, doc, getDocs, collection, addDoc } from "firebase/firestore";
 import { RxCross2 } from "react-icons/rx";
+import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const initalDaysState = {
     0: {
@@ -44,6 +46,9 @@ const Dashboard = () => {
     const [days, setDays] = useState(initalDaysState);
     const [modal, setModal] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [expandedCategory, setExpandedCategory] = useState(-1);
+    const [expandedClass, setExpandedClass] = useState(-1);
+    const [activeCategoryUsers, setActiveCategoryUsers] = useState([]);
 
     const addClass = () => {
         setModal(true);
@@ -94,29 +99,62 @@ const Dashboard = () => {
         setDays(initalDaysState);
     }
 
+    const expandCategory = (e, expanded, index) => {
+        setExpandedClass(-1);
+        setExpandedCategory(expanded ? index : -1);
+    }
+
+    const accordianExpandHandler = async (index, category, classId) => {
+        if (index === expandedClass) {
+            setExpandedClass(-1);
+            return;
+        } 
+        setExpandedClass(index);
+        setActiveCategoryUsers([]);
+        const userSnapshot = await getDocs(collection(firestore, "categories", category, "classes", classId, "users"));
+        const users = [];
+        userSnapshot.docs.forEach(doc => {
+            users.push({
+                id: doc.id,
+                ...doc.data(),
+            });
+        });
+        setActiveCategoryUsers(users);
+    }
+
     useEffect(() => {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const querySnapshot = await getDoc(doc(firestore, "users", "admins"));
                 const admins = querySnapshot.data();
+                // const tempCategories = []
                 if (admins?.emails?.includes(user.email)) {
-                    const categories = []
                     setUser(user);
                     const querySnapshot = await getDocs(collection(firestore, "categories"))
-                    querySnapshot.forEach((doc) => {
-                        categories.push({
-                            id: doc.id,
-                            ...doc.data()
+                    const promises = querySnapshot.docs.map(async (doc) => {
+                        const classes = [];
+                        const categorySnapshot = await getDocs(collection(firestore, "categories", doc.id, "classes"));
+                        categorySnapshot.forEach((classDoc) => {
+                            classes.push({
+                                id: classDoc.id,
+                                ...classDoc.data()
+                            });
                         });
+                        return {
+                            id: doc.id,
+                            ...doc.data(),
+                            classes,
+                        };
                     });
-                    setCategories(categories);
+                    const tempCategories = await Promise.all(promises);
+                    setCategories(tempCategories);
                 }
             }
         });
     }, []);
 
     return (
-        <div className="h-screen snap-start bg-black text-white sm:p-12 p-3 flex justify-between items-center">
+        <div className="h-screen snap-start bg-black text-white sm:p-12 p-3 flex flex-col gap-3">
             {/* modal */}
             {modal && <div className="fixed inset-0 bg-black bg-opacity-90 z-10 flex justify-center items-center text-white">
                 <div className="bg-gradient-to-tr from-[#55549D] to-[#120B2C] p-5 rounded-md mx-3 flex flex-col gap-2 relative">
@@ -166,10 +204,91 @@ const Dashboard = () => {
                     </button>
                 </div>
             </div>}
-            <div className="flex justify-between">
+            <div className="w-full flex justify-between pt-20">
                 <h1 className="text-xl font-semibold">Dashboard for Admins</h1>
                 {!user ? <button onClick={singInWithGoogle} className="bg-green-50 font-black">SingIn</button> :
                 <button className="bg-green-50 text-black px-3 rounded-md font-semibold" onClick={addClass}>Add Class</button>}
+            </div>
+            <div>
+                {/* <h2 className="text-xl font-semibold">Categories {categories.map(category => category.id)}</h2> */}
+                {/* categories accordian with classes as accoridians list */}
+                {
+                    categories.map((category, index) => {
+                        return (
+                            <Accordion key={index} expanded={expandedCategory === index} onChange={(e, expanded) => expandCategory(e, expanded, index)}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}
+                                aria-controls="panel1a-content"
+                                id="panel1a-header">
+                                    {category.id}
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <div className="flex flex-col gap-2">
+                                        {
+                                            category.classes.map(({id, name, level, fees, freq, startTime, endTime, days }, index) => {
+                                                if (name && startTime && endTime && days )
+                                                    return (
+                                                    <Accordion expanded={expandedClass === index}>
+                                                        <AccordionSummary 
+                                                            expandIcon={<ExpandMoreIcon />}
+                                                            aria-controls="panel2a-content"
+                                                            id="panel2a-header"
+                                                            onClick={() => accordianExpandHandler(index, category.id, id)}
+                                                        >
+                                                            <div key={index} className="w-full p-2 bg-[#55549d8c] rounded-md flex justify-between gap-2">
+                                                                <span>{name}</span>
+                                                                <span className="text-sm opacity-65">{level === 'All' ? 'Beginner/Intermediate/Advanced' : level}</span>
+                                                                <span>{startTime}-{endTime}</span>
+                                                            </div>
+                                                         </AccordionSummary>
+                                                         <AccordionDetails>
+                                                                <div className="flex max-sm:flex-col gap-2 items-center">
+                                                                    <span>Days:</span>
+                                                                    <div className="flex gap-2">
+                                                                        {Object.values(days).map(({day, active}, index) => {
+                                                                            return active && <span key={index} className="p-1 bg-green-50 rounded-md">{day}</span>
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                                    <span>Fees: {fees} per {freq}</span>
+                                                                    <div>
+                                                                        <h3 >Enrolled Users List:</h3>
+                                                                        {/* table for the enrolled user */}
+                                                                        <table className="w-full">
+                                                                            <thead>
+                                                                                <tr className="flex justify-around bg-[#8dc99760] py-1 my-1">
+                                                                                    <th>Name</th>
+                                                                                    <th>Email</th>
+                                                                                    <th>Age</th>
+                                                                                    <th>Phone</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody className="flex flex-col gap-1">
+                                                                                {
+                                                                                    activeCategoryUsers.map((user, index) => {
+                                                                                        return (
+                                                                                        <tr key={index} className={`flex justify-around ${index%2 !== 0 && 'bg-slate-100'}`}>
+                                                                                            <td>{user.name}</td>
+                                                                                            <td>{user.email}</td>
+                                                                                            <td>{user.age}</td>
+                                                                                            <td>{user.phone}</td>
+                                                                                        </tr>
+                                                                                        )
+                                                                                    })
+                                                                                }
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                            </AccordionDetails>
+                                                    </Accordion>
+                                                    )
+                                            })
+                                        }
+                                    </div>
+                                </AccordionDetails>
+                            </Accordion>
+                        )
+                    })
+                }
             </div>
         </div>
     );

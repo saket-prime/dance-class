@@ -78,8 +78,9 @@ const Classes = () => {
         const age = e.target.age?.value;
         const phone = e.target.phone?.value;
         const classId = e.target.classId?.value;
+        const category = e.target.category?.value;
         
-        await setDoc(doc(firestore, "users", email), {
+        await setDoc(doc(firestore, "categories", category, "classes", classId, "users", email), {
             name,
             email,
             age,
@@ -104,7 +105,7 @@ const Classes = () => {
     return (
         <div className="h-screen pt-10 snap-start bg-slate-500 bg-blend-multiply bg-gradient-to-tr from-[#55549D] to-[#120B2C] flex flex-col justify-center " id='classes'>
             {/* modal */}
-            {modal.isOpen && <div className="fixed inset-0 bg-black bg-opacity-90 z-10 flex justify-center items-center text-white">
+            {modal.isOpen && <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center text-white">
                 <div className="bg-gradient-to-tr from-[#55549D] to-[#120B2C] p-5 rounded-md mx-3 flex flex-col gap-2 relative">
                     <h2 className="text-center">{modal.data.name}</h2>
                     {modal.data.trainer && modal.data.startTime && modal.data.endTime && <p className="text-center text-sm opacity-75">(<span>By trainer</span> {modal.data.trainer} from <span className="text-base">{modal.data.startTime}</span> to <span className="text-base">{modal.data.endTime}</span>)</p>}
@@ -125,6 +126,7 @@ const Classes = () => {
                             <input type="number" placeholder="Phone" className="p-2 my-2 rounded-md outline-none" id="phone"/>
                         </div>
                         <input type="text" className="p-2 rounded-md outline-none hidden" value={modal.data.id} id="classId"/>
+                        <input type="text" className="p-2 rounded-md outline-none hidden" value={activeCategory} id="category"/>
                         <button className="text-white font-semibold p-2 my-2 w-full rounded-md bg-[#0f09275a]" type="submit">SUBMIT</button>
                     </form>
                     <button onClick={() => setModal({isOpen: false, data: {}})} className="absolute top-3 right-3 p-1 rounded-2xl bg-slate-700">
