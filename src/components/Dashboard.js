@@ -206,7 +206,7 @@ const Dashboard = () => {
             </div>}
             <div className="w-full flex justify-between pt-20">
                 <h1 className="text-xl font-semibold">Dashboard for Admins</h1>
-                {!user ? <button onClick={singInWithGoogle} className="bg-green-50 font-black">SingIn</button> :
+                {!user ? <button onClick={singInWithGoogle} className="bg-green-50 text-black px-3 rounded-md font-semibold">SingIn</button> :
                 <button className="bg-green-50 text-black px-3 rounded-md font-semibold" onClick={addClass}>Add Class</button>}
             </div>
             <div>
