@@ -17,6 +17,12 @@ const initialModalState = {
     }
 };
 
+const initialAlretState = {
+    isOpen: false,
+    type: 'success',
+    message: 'Some message here...',
+    };
+
 const Classes = () => {
 
     const [categories, setCategories] = useState([]);
@@ -24,34 +30,46 @@ const Classes = () => {
     const [classes, setClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [modal, setModal] = useState(initialModalState);
+    const [alret, setAlert] = useState(initialAlretState);
 
     const getDocsCategories = async (query) => {
-        const categories = [];
-        const querySnapshot = await getDocs(query);
-        querySnapshot.forEach((doc) => {
-            categories.push({
-                id: doc.id,
-                ...doc.data()
+        try {
+            const categories = [];
+            const querySnapshot = await getDocs(query);
+            querySnapshot.forEach((doc) => {
+                categories.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
             });
-        });
-        setCategories(categories);
-        setActiveCategory(categories.length ? categories[0]?.id : '');
+            setCategories(categories);
+            setActiveCategory(categories.length ? categories[0]?.id : '');
+        }
+        catch (error) {
+            setAlert({isOpen: true, type: 'error', message: 'Failed to fetch categories!'});
+        }
     }
 
     const getClassSchedulesByCategory = async (category) => {
-        if (!category) return;
-        const classes = [];
-        setIsLoading(true);
-        const q = query(collection(firestore, "categories", category, "classes"));
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => {
-            classes.push({
-                id: doc.id,
-                ...doc.data()
+        try {
+            if (!category) return;
+            const classes = [];
+            setIsLoading(true);
+            const q = query(collection(firestore, "categories", category, "classes"));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                classes.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
             });
-        });
-        setClasses(classes);
-        setIsLoading(false);
+            setClasses(classes);
+            setIsLoading(false);
+        }
+        catch (error) {
+            setAlert({isOpen: true, type: 'error', message: 'Failed to fetch classes!'});
+            setIsLoading(false);
+        }
     }
 
     const showModal = ({id, name, description, startTime, endTime, days, trainer, level}) => {
@@ -71,23 +89,30 @@ const Classes = () => {
     }
 
     const enrollFormHandler = async (e) => {
-        e.preventDefault();
+        try {
+            e.preventDefault();
 
-        const name = e.target.name?.value;
-        const email = e.target.email?.value;
-        const age = e.target.age?.value;
-        const phone = e.target.phone?.value;
-        const classId = e.target.classId?.value;
-        const category = e.target.category?.value;
-        
-        await setDoc(doc(firestore, "categories", category, "classes", classId, "users", email), {
-            name,
-            email,
-            age,
-            phone,
-            classId
-        });
-        setModal(initialModalState);
+            const name = e.target.name?.value;
+            const email = e.target.email?.value;
+            const age = e.target.age?.value;
+            const phone = e.target.phone?.value;
+            const classId = e.target.classId?.value;
+            const category = e.target.category?.value;
+            
+            await setDoc(doc(firestore, "categories", category, "classes", classId, "users", email), {
+                name,
+                email,
+                age,
+                phone,
+                classId
+            });
+            setModal(initialModalState);
+            setAlert({isOpen: true, type: 'success', message: 'Form submitted successfully!'});
+        }
+        catch (error) {
+            console.error('Form submission failed!', error);
+            setAlert({isOpen: true, type: 'error', message: 'Form submission failed!'});
+        }
     }
 
     const activateTab = (category) => {
@@ -99,12 +124,23 @@ const Classes = () => {
     }, [activeCategory]);
 
     useEffect(() => {
+        if (alret.isOpen) {
+            setTimeout(() => {
+                setAlert(initialAlretState);
+            }, 3000);
+        }
+    }, [alret.isOpen]);
+
+    useEffect(() => {
         getDocsCategories(collection(firestore, "categories"));
     }, []);
 
     return (
         <div className="h-screen pt-10 snap-start bg-slate-500 bg-blend-multiply bg-gradient-to-tr from-[#55549D] to-[#120B2C] flex flex-col justify-center " id='classes'>
             {/* modal */}
+            {alret.isOpen && <div className={`fixed m-auto p-3 max-w-fit top-14 z-30 rounded-md flex justify-center self-center text-white ${alret.type === 'success' ? 'bg-green-500' : 'bg-red-500'} bg-opacity-75`}>
+                <p>{alret.message}</p>
+            </div>}
             {modal.isOpen && <div className="fixed inset-0 bg-black bg-opacity-80 z-10 flex justify-center items-center text-white">
                 <div className="bg-gradient-to-tr from-[#55549D] to-[#120B2C] p-5 rounded-md mx-3 flex flex-col gap-2 relative">
                     <h2 className="text-center">{modal.data.name}</h2>
@@ -144,7 +180,7 @@ const Classes = () => {
                     </svg>
                     <span class="sr-only">Loading...</span>
                 </div> :
-            <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-2/3 mt-10 px-4">
+            <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-2/3 overflow-y-auto mt-10 px-4">
                 {classes.map(({id, name, startTime, description, endTime, days, trainer, level, fees, freq}) => (
                     name && startTime && endTime && days && <div className="flex flex-col gap-1 bg-[#32445577] p-3 rounded-md h-fit">
                         <h2 className="text-center">{name}</h2>
