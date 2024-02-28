@@ -2,11 +2,11 @@ import { FaPhone } from "react-icons/fa6";
 import { AiOutlineMail } from "react-icons/ai";
 import { GrLocation } from "react-icons/gr";
 import { firestore } from '../config/firebase.config';
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, updateDoc } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-const ContactUs = () => {
+const ContactUs = ({ contact }) => {
 
   const [formAlert, setFormAlert] = useState({
     type: '',
@@ -20,11 +20,15 @@ const ContactUs = () => {
       const name = e.target.name?.value;
       const email = e.target.email?.value;
       const message = e.target.message?.value;
+      const query = doc(firestore, "application", "queries");
+      const id = uuidv4();
 
-      await setDoc(doc(firestore, "application", "queries", "queries", uuidv4()), {
-        name,
-        email,
-        message
+      await updateDoc(query, {
+        [id]: {
+          name,
+          email,
+          message
+        }
       });
 
       e.target.reset();
@@ -56,9 +60,9 @@ const ContactUs = () => {
         <div className='sm:w-1/2 flex items-center justify-center'>
             <div>
                 <p className='p-2 text-2xl max-sm:text-base tracking-widest font-normal'>CONTACT INFORMATION</p>
-                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xl font-light'><FaPhone color='#55549D'/> +202 555 0789</p>
-                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><AiOutlineMail color='#55549D' /> dance@email.com</p>
-                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><GrLocation color='#55549D' /> 218 Pegg Rd, Morris, New York(NY), 13808 </p>
+                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xl font-light'><FaPhone color='#55549D'/> {contact?.number}</p>
+                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><AiOutlineMail color='#55549D' /> {contact?.email}</p>
+                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><GrLocation color='#55549D' /> {contact?.address}</p>
             </div>    
         </div>
         <div className='sm:w-1/2 self-center flex justify-center flex-col items-center'>

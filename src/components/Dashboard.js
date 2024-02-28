@@ -3,6 +3,7 @@ import { firestore, auth, singInWithGoogle } from "../config/firebase.config";
 import { onAuthStateChanged } from "firebase/auth";
 import { getDoc, doc, getDocs, collection, addDoc } from "firebase/firestore";
 import { RxCross2 } from "react-icons/rx";
+import { FaPen } from "react-icons/fa";
 import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -49,6 +50,7 @@ const Dashboard = () => {
     const [expandedCategory, setExpandedCategory] = useState(-1);
     const [expandedClass, setExpandedClass] = useState(-1);
     const [activeCategoryUsers, setActiveCategoryUsers] = useState([]);
+    const [applicationData, setApplicationData] = useState({});
 
     const addClass = () => {
         setModal(true);
@@ -97,6 +99,75 @@ const Dashboard = () => {
         e.target.reset();
         setModal(false);
         setDays(initalDaysState);
+    }
+
+    const onApplicationContentUpdate = async (e) => {
+        e.preventDefault();
+    }
+
+    const addClassFormRenderer = () => {
+        return (
+            <div>
+            <h2 className="text-center">Add Class</h2>
+                <form className="text-black" onSubmit={onAddClass}>
+                    <div className="flex flex-col gap-2">
+                        <input type="text" placeholder="Class Name*" className="p-2 rounded-md" id="name" required/>
+                        <textarea placeholder="Description" className="p-2 rounded-md" id="description"></textarea>
+                        <div className="flex gap-2 items-center">
+                            <span className="text-white">Start time*</span><input type="time" className="p-2 rounded-md" id="startTime" required/>
+                            <span className="text-white">End time*</span><input type="time" className="p-2 rounded-md" id="endTime" required/>
+                        </div>
+                        <div className="flex gap-2 text-white">
+                            {Object.keys(days).map((key, index) => {
+                                return <label key={index} className="flex items-center gap-1">
+                                    <input type="checkbox" onChange={(e) => onAddDay(e, key)} defaultChecked={days[key].active}/>
+                                    <span>{days[key].day}</span>
+                                </label>
+                            })}
+                        </div>
+                        <input type="text" placeholder="Trainer" className="p-2 rounded-md" id="trainer"/>
+                        <select className="p-2 rounded-md" id="level">
+                            {level.map((l, index) => {
+                                return <option key={index} value={l}>{l}</option>
+                            })}
+                        </select>
+                        <div className="flex items-center gap-2">
+                            <input type="number" placeholder="Fees" className="p-2 rounded-md" id="fees"/>
+                            <span className="text-white">per</span>
+                            <select className="p-2 rounded-md" id="freq">
+                                {freq.map((f, index) => {
+                                    return <option key={index} value={f}>{f}</option>
+                                })}
+                            </select>
+                        </div>
+                        <select className="p-2 rounded-md" id="category">
+                            <option value="0">Select Category</option>
+                            {categories.map((c, index) => {
+                                return <option key={index} value={c.id}>{c.id}</option>
+                            })}
+                        </select>
+                        <button className="bg-green-50 text-black p-2 rounded-md" type="submit">Add Class</button>
+                    </div>
+                </form>
+            </div>
+        )
+    }
+
+    const applicationContentUpdateFormRenderer = () => {
+        return applicationData?.content && (
+            <form className="text-black" onSubmit={onApplicationContentUpdate}>
+                {
+                    Object.keys(applicationData.content).map((key, index) => {
+                        return (
+                            <div key={index} className="flex flex-col gap-2">
+                                <label>{key}</label>
+                                <input type="text" defaultValue={applicationData.content[key]} id={key}/>
+                            </div>
+                        )
+                    })
+                }
+            </form>
+        )
     }
 
     const expandCategory = (e, expanded, index) => {
@@ -148,57 +219,24 @@ const Dashboard = () => {
                     });
                     const tempCategories = await Promise.all(promises);
                     setCategories(tempCategories);
+                    const applicationSnapshot = await getDocs(collection(firestore, "application"));
+                    const applications = {};
+                    applicationSnapshot?.docs?.forEach((doc) => {
+                        applications[doc.id] = doc.data();
+                    });
+                    console.log(applications, "application");
+                    setApplicationData(applications);
                 }
             }
         });
     }, []);
 
     return (
-        <div className="h-screen snap-start bg-black text-white sm:p-12 p-3 flex flex-col gap-3">
+        <div className="min-h-screen bg-black text-white sm:p-12 p-3 flex flex-col gap-3">
             {/* modal */}
             {modal && <div className="fixed inset-0 bg-black bg-opacity-90 z-10 flex justify-center items-center text-white">
                 <div className="bg-gradient-to-tr from-[#55549D] to-[#120B2C] p-5 rounded-md mx-3 flex flex-col gap-2 relative">
-                    <h2 className="text-center">Add Class</h2>
-                    <form className="text-black" onSubmit={onAddClass}>
-                        <div className="flex flex-col gap-2">
-                            <input type="text" placeholder="Class Name*" className="p-2 rounded-md" id="name" required/>
-                            <textarea placeholder="Description" className="p-2 rounded-md" id="description"></textarea>
-                            <div className="flex gap-2 items-center">
-                                <span className="text-white">Start time*</span><input type="time" className="p-2 rounded-md" id="startTime" required/>
-                                <span className="text-white">End time*</span><input type="time" className="p-2 rounded-md" id="endTime" required/>
-                            </div>
-                            <div className="flex gap-2 text-white">
-                                {Object.keys(days).map((key, index) => {
-                                    return <label key={index} className="flex items-center gap-1">
-                                        <input type="checkbox" onChange={(e) => onAddDay(e, key)} defaultChecked={days[key].active}/>
-                                        <span>{days[key].day}</span>
-                                    </label>
-                                })}
-                            </div>
-                            <input type="text" placeholder="Trainer" className="p-2 rounded-md" id="trainer"/>
-                            <select className="p-2 rounded-md" id="level">
-                                {level.map((l, index) => {
-                                    return <option key={index} value={l}>{l}</option>
-                                })}
-                            </select>
-                            <div className="flex items-center gap-2">
-                                <input type="number" placeholder="Fees" className="p-2 rounded-md" id="fees"/>
-                                <span className="text-white">per</span>
-                                <select className="p-2 rounded-md" id="freq">
-                                    {freq.map((f, index) => {
-                                        return <option key={index} value={f}>{f}</option>
-                                    })}
-                                </select>
-                            </div>
-                            <select className="p-2 rounded-md" id="category">
-                                <option value="0">Select Category</option>
-                                {categories.map((c, index) => {
-                                    return <option key={index} value={c.id}>{c.id}</option>
-                                })}
-                            </select>
-                            <button className="bg-green-50 text-black p-2 rounded-md" type="submit">Add Class</button>
-                        </div>
-                    </form>
+                    {addClassFormRenderer()}
                     <button onClick={() => setModal(false)} className="absolute top-3 right-3 p-1 rounded-2xl bg-slate-700">
                         <RxCross2 />
                     </button>
@@ -210,7 +248,7 @@ const Dashboard = () => {
                 <button className="bg-green-50 text-black px-3 rounded-md font-semibold" onClick={addClass}>Add Class</button>}
             </div>
             <div>
-                {/* <h2 className="text-xl font-semibold">Categories {categories.map(category => category.id)}</h2> */}
+                <h2 className="text-xl font-semibold">Categories</h2>
                 {/* categories accordian with classes as accoridians list */}
                 {
                     categories.map((category, index) => {
@@ -253,20 +291,20 @@ const Dashboard = () => {
                                                                     <div>
                                                                         <h3 >Enrolled Users List:</h3>
                                                                         {/* table for the enrolled user */}
-                                                                        <table className="w-full">
-                                                                            <thead>
-                                                                                <tr className="flex justify-around bg-[#8dc99760] py-1 my-1">
+                                                                        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                                                            <thead className="text-xs text-white uppercase bg-slate-700 dark:text-gray-400">
+                                                                                <tr className="py-2">
                                                                                     <th>Name</th>
                                                                                     <th>Email</th>
                                                                                     <th>Age</th>
                                                                                     <th>Phone</th>
                                                                                 </tr>
                                                                             </thead>
-                                                                            <tbody className="flex flex-col gap-1">
+                                                                            <tbody >
                                                                                 {
                                                                                     activeCategoryUsers.map((user, index) => {
                                                                                         return (
-                                                                                        <tr key={index} className={`flex justify-around ${index%2 !== 0 && 'bg-slate-100'}`}>
+                                                                                        <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 py-1">
                                                                                             <td>{user.name}</td>
                                                                                             <td>{user.email}</td>
                                                                                             <td>{user.age}</td>
@@ -289,6 +327,9 @@ const Dashboard = () => {
                         )
                     })
                 }
+            </div>
+            <div>
+                {applicationContentUpdateFormRenderer()}
             </div>
         </div>
     );

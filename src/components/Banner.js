@@ -3,29 +3,10 @@ import DanceImage from '../assets/dancer1.png'
 import { FaChevronLeft, FaChevronRight, FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 import "../slide.css"
 
-const Banner = () => {
+const Banner = ({ slides = [] }) => {
     
     const colors = ["#0088FE", "#00C49F", "#FFBB28"];
     const delay = 4000;
-    
-    const slides = [
-        {   
-            img: DanceImage,
-            title: "Enjoy Each Step Along The Way.",
-            description: "Learn To Dance With Style"
-        },
-        {
-            img: DanceImage,
-            title: "Enjoy Each Step Along The Way",
-            description: "Learn To Exercise With Style"
-        },
-        {
-            img: DanceImage,
-            title: "Enjoy Each Step Along The Way",
-            description: "Learn To Photograph With Style"
-        }
-    ]
-    
     
     const [index, setIndex] = useState(0);
     const timeoutRef = useRef(null);
@@ -84,9 +65,9 @@ const Banner = () => {
                                 <p className='flex p-3 text-wrap font-semi-bold text-4xl sm:text-6xl'>{slide.description} </p>
                                 <p className='p-3 flex gap-2 items-center'>
                                     <span className='text-base sm:text-lg'>Join Class</span>
-                                    <span className='border p-1 rounded-full pl-1.5'>
-                                        <a href='#classes' className='cursor-pointer'><FaChevronRight /></a>
-                                    </span>
+                                    <a className='border p-1 rounded-full pl-1.5 cursor-pointer' href='#classes'>
+                                        <FaChevronRight />
+                                    </a>
                                 </p>
                             </div>
                             <div className=' absolute ml-20 top-[90%] flex items-center gap-1' >
