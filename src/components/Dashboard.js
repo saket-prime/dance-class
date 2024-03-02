@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { firestore, auth, singInWithGoogle } from "../config/firebase.config";
 import { onAuthStateChanged } from "firebase/auth";
-import { getDoc, doc, getDocs, collection, addDoc } from "firebase/firestore";
+import { getDoc, doc, getDocs, collection, addDoc, setDoc } from "firebase/firestore";
 import { RxCross2 } from "react-icons/rx";
-import { FaPen } from "react-icons/fa";
+import { IoMdAdd } from "react-icons/io";
+import { RiDeleteBin3Fill } from "react-icons/ri";
 import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import _ from "lodash";
 
 const initalDaysState = {
     0: {
@@ -51,6 +53,7 @@ const Dashboard = () => {
     const [expandedClass, setExpandedClass] = useState(-1);
     const [activeCategoryUsers, setActiveCategoryUsers] = useState([]);
     const [applicationData, setApplicationData] = useState({});
+    const [formUpdated, setFormUpdated] = useState(false);
 
     const addClass = () => {
         setModal(true);
@@ -101,8 +104,13 @@ const Dashboard = () => {
         setDays(initalDaysState);
     }
 
-    const onApplicationContentUpdate = async (e) => {
-        e.preventDefault();
+    const onApplicationContentUpdate = async (value, location) => {
+        // console.log(location, "location");
+        const tempApplicationData = _.cloneDeep(applicationData);
+        _.set(tempApplicationData, location, value);
+        // console.log(tempApplicationData, "tempApplicationData");
+        setApplicationData(tempApplicationData);
+        setFormUpdated(true);
     }
 
     const addClassFormRenderer = () => {
@@ -153,21 +161,67 @@ const Dashboard = () => {
         )
     }
 
-    const applicationContentUpdateFormRenderer = () => {
-        return applicationData?.content && (
-            <form className="text-black" onSubmit={onApplicationContentUpdate}>
-                {
-                    Object.keys(applicationData.content).map((key, index) => {
-                        return (
-                            <div key={index} className="flex flex-col gap-2">
-                                <label>{key}</label>
-                                <input type="text" defaultValue={applicationData.content[key]} id={key}/>
-                            </div>
-                        )
-                    })
-                }
-            </form>
-        )
+    // a recursive formRenderer which reads from applicationData and if object creates a child form and if an array creates serial form (onChange of the form updates applicationData)
+    const applicationContentUpdateFormRenderer = (key, data, location) => {
+        location.push(key);
+        if (Array.isArray(data)) {
+            return <div>
+            {data.map((item, index) => (
+                <Accordion>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />} 
+                    aria-controls="panel1a-content"
+                    id="panel1a-header">
+                        <div className="flex justify-between w-full me-4 items-center">
+                            <span>{`${key}-${index}`}</span> 
+                            <span><RiDeleteBin3Fill className="cursor-pointer" onClick={() => onApplicationContentUpdate([...data.slice(0, index), ...data.slice(index+1)], [...location])}/></span>
+                        </div>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        {applicationContentUpdateFormRenderer(`${index}`, item, [...location])}
+                    </AccordionDetails>
+                </Accordion>
+            ))}
+            <div className="flex justify-end p-2"><IoMdAdd className=" text-3xl bold rounded-full border-black border cursor-pointer" onClick={() => onApplicationContentUpdate(data[0], [...location, data.length])}/></div>
+            </div>
+        }
+        else if (typeof data === 'object') {
+            return Object.keys(data).map((key, index) => (
+                typeof data[key] === 'string' || typeof data === 'number' || typeof data === 'boolean' ? 
+                <div key={key} className="flex flex-col gap-2">
+                    <h3>{key}</h3>
+                    <input type="text" value={data[key]} onChange={(e) => onApplicationContentUpdate(e.target.value, [...location, key])} className="p-2 rounded-md"/>
+                </div>
+                :<Accordion>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header">
+                        {key}
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        {applicationContentUpdateFormRenderer(key, data[key], [...location])}
+                    </AccordionDetails>
+                </Accordion>
+            ));
+        }
+        else if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
+            return (
+                <div key={key} className="flex flex-col gap-2">
+                    <h3>{key}</h3>
+                    <input type="text" value={data} onChange={(e) => onApplicationContentUpdate(e.target.value, [...location, key])} className="p-2 rounded-md"/>
+                </div>
+            )
+        }
+    }
+
+    const updateApplicationContent = async () => {
+        try{
+            const applicationRef = doc(firestore, "application", "content");
+            await setDoc(applicationRef, applicationData?.content);
+            setFormUpdated(false);
+        }
+        catch(e) {
+            console.log(e, "error");
+        }
     }
 
     const expandCategory = (e, expanded, index) => {
@@ -242,12 +296,12 @@ const Dashboard = () => {
                     </button>
                 </div>
             </div>}
-            <div className="w-full flex justify-between pt-20">
+            <div className="w-full flex justify-between">
                 <h1 className="text-xl font-semibold">Dashboard for Admins</h1>
                 {!user ? <button onClick={singInWithGoogle} className="bg-green-50 text-black px-3 rounded-md font-semibold">SingIn</button> :
                 <button className="bg-green-50 text-black px-3 rounded-md font-semibold" onClick={addClass}>Add Class</button>}
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-semibold">Categories</h2>
                 {/* categories accordian with classes as accoridians list */}
                 {
@@ -328,8 +382,36 @@ const Dashboard = () => {
                     })
                 }
             </div>
-            <div>
-                {applicationContentUpdateFormRenderer()}
+            <div className="flex flex-col gap-2">
+                {/* {applicationContentUpdateFormRenderer()} */}
+                <h2 className="text-xl font-semibold">Application Content</h2>
+                {applicationContentUpdateFormRenderer('content', applicationData?.content, [])}
+                <button onClick={updateApplicationContent} disabled={!formUpdated} className={`${!formUpdated && 'opacity-50'} bg-green-300 text-black py-1 px-3 rounded-md self-center`}>UPDATE</button>
+            </div>
+            <div className="flex flex-col gap-2">
+                <h2 className="text-xl font-semibold">Queries</h2>
+                <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead className="text-xs text-white uppercase bg-slate-700 dark:text-gray-400">
+                        <tr className="py-2">
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody >
+                        {
+                            Object.values(applicationData?.queries || {})?.map((query, index) => {
+                                return (
+                                <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 py-1">
+                                    <td>{query.name}</td>
+                                    <td>{query.email}</td>
+                                    <td>{query.message}</td>
+                                </tr>
+                                )
+                            })
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     );

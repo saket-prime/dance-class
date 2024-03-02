@@ -29,3 +29,11 @@
 .slideshowDot.active {
   background-color: #6a0dad;
 }
+
+.about {
+  display: -webkit-box; 
+  -webkit-box-orient: vertical; 
+  -webkit-line-clamp: 2; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}

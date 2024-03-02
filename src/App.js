@@ -7,8 +7,10 @@ import Dashboard from './components/Dashboard'
 import Faqs from './components/Faqs'
 import Banner from './components/Banner'
 import { firestore } from './config/firebase.config';
-import { getDoc, doc } from 'firebase/firestore'
+import { getDoc, doc , getDocs, collection } from 'firebase/firestore'
 import { useEffect, useState } from 'react';
+import Trainers from './components/Trainer';
+import './global.css'
 
 const Index = ({ data, isLoading, isError }) => {
   return (
@@ -23,8 +25,9 @@ const Index = ({ data, isLoading, isError }) => {
       <Header />
       <Banner slides={data?.slides} />
       <About data={data?.about}/>
-      <Classes />
-      <Faqs />
+      <Classes categories={data?.categories}/>
+      <Trainers categories={data?.categories}/>
+      <Faqs faqs={data?.faqs}/>
       <ContactUs contact={data?.contact}/>
     </div>
   )
@@ -35,13 +38,40 @@ const App = () => {
   const [applicationContent, setApplicationContent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [alert, setAlert] = useState({isOpen: false, type: '', message: ''});
+
+  const getDocsCategories = async (query) => {
+    try {
+        const categories = [];
+        const querySnapshot = await getDocs(query);
+        querySnapshot.forEach((doc) => {
+            categories.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        return categories;
+    }
+    catch (error) {
+        setAlert({isOpen: true, type: 'error', message: 'Failed to fetch categories!'});
+        return [];
+    }
+}
 
   const setData = async () => {
     try {
       setLoading(true);
       const docref = doc(firestore, "application", "content");
       const docSnap = await getDoc(docref);
-      setApplicationContent(docSnap.data());
+      const categories = await getDocsCategories(collection(firestore, "categories"));
+      setApplicationContent({
+        ...docSnap.data(),
+        categories: categories,
+      });
+      console.log("Document data:", {
+        ...docSnap.data(),
+        categories: categories,
+      });
       setLoading(false);
     }
     catch (e) {

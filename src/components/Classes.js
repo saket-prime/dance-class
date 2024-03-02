@@ -13,33 +13,14 @@ const initialAlretState = {
     message: 'Some message here...',
     };
 
-const Classes = () => {
+const Classes = ({ categories }) => {
 
-    const [categories, setCategories] = useState([]);
-    const [activeCategory, setActiveCategory] = useState('');
+    const [activeCategory, setActiveCategory] = useState(categories?.length ? categories[0]?.id : '');
     const [classes, setClasses] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [modal, setModal] = useState(initialModalState);
     const [alret, setAlert] = useState(initialAlretState);
     const [checkedClasses, setCheckedClasses] = useState({});
-
-    const getDocsCategories = async (query) => {
-        try {
-            const categories = [];
-            const querySnapshot = await getDocs(query);
-            querySnapshot.forEach((doc) => {
-                categories.push({
-                    id: doc.id,
-                    ...doc.data()
-                });
-            });
-            setCategories(categories);
-            setActiveCategory(categories.length ? categories[0]?.id : '');
-        }
-        catch (error) {
-            setAlert({isOpen: true, type: 'error', message: 'Failed to fetch categories!'});
-        }
-    }
 
     const getClassSchedulesByCategory = async (category) => {
         try {
@@ -168,10 +149,6 @@ const Classes = () => {
         }
     }, [alret.isOpen]);
 
-    useEffect(() => {
-        getDocsCategories(collection(firestore, "categories"));
-    }, []);
-
     return (
         <div className="h-screen pt-10 snap-start bg-slate-500 bg-blend-multiply bg-gradient-to-tr from-[#55549D] to-[#120B2C] flex flex-col justify-center " id='classes'>
             {/* modal */}
@@ -189,7 +166,7 @@ const Classes = () => {
                 </div>
             </div>}
             <div className="flex gap-5 text-lg font-semibold self-center">
-                {categories.map(({id}) => <h2 className={`${activeCategory === id && 'border-b-2'} cursor-pointer hover:opacity-60`} onClick={() => activateTab(id)}>{id.toUpperCase()}</h2>)}
+                {categories?.map(({id}) => <h2 className={`${activeCategory === id && 'border-b-2'} cursor-pointer hover:opacity-60`} onClick={() => activateTab(id)}>{id.toUpperCase()}</h2>)}
             </div>
             {isLoading ? <div role="status" className="mx-auto h-2/3 mt-10 items-center justify-center flex">
                     <svg aria-hidden="true" className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -199,7 +176,7 @@ const Classes = () => {
                     <span className="sr-only">Loading...</span>
                 </div> :
             <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-2/3 overflow-y-auto mt-10 px-4">
-                { classes.map((classItem) => {
+                { classes?.map((classItem) => {
                     const {id, name, startTime, description, endTime, days, trainer, level, fees, freq} = classItem;
                     return (name && startTime && endTime && days && <div className="flex flex-col gap-1 bg-[#32445577] p-3 rounded-md h-fit relative">
                         <h2 className="text-center">{name}</h2>

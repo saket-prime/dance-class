@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import DanceImage from '../assets/dancer1.png'
 import { FaChevronLeft, FaChevronRight, FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
-import "../slide.css"
 
 const Banner = ({ slides = [] }) => {
     
@@ -49,7 +47,7 @@ const Banner = ({ slides = [] }) => {
                 className="slideshowSlider "
                 style={{ transform: `translate3d(${-index * 100}%, 0, 0)` }}
             >
-                {slides.map((slide, index) => (
+                {slides?.map((slide, index) => (
                     <div
                         className=" inline-flex bg-dancer1 bg-center bg-cover bg-blend-color-dodge sm:bg-gradient-to-r sm:to-[#1c1c24] sm:from-[#1b007a] h-screen w-full items-center"
                         key={index}
