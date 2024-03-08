@@ -9,6 +9,7 @@ const Header = () => {
               <ul className='flex gap-5'>
                   <li className='hidden sm:block'><a href='#about'>ABOUT</a></li>
                   <li className='hidden sm:block'><a href='#classes'>CLASS</a></li>
+                  <li className='hidden sm:block'><a href='#trainers'>TRAINERS</a></li>
                   <li className='hidden sm:block'><a href='#faq'>FAQ</a></li>
                   <li className='hidden sm:block'><a href='#contact'>CONTACT US</a></li>
             </ul>

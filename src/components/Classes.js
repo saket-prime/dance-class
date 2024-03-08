@@ -178,9 +178,11 @@ const Classes = ({ categories }) => {
             <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-2/3 overflow-y-auto mt-10 px-4">
                 { classes?.map((classItem) => {
                     const {id, name, startTime, description, endTime, days, trainer, level, fees, freq} = classItem;
-                    return (name && startTime && endTime && days && <div className="flex flex-col gap-1 bg-[#32445577] p-3 rounded-md h-fit relative">
+                    return (name && startTime && endTime && days && <div className="flex flex-col justify-between gap-1 bg-[#32445577] p-3 rounded-md h-fit min-h-44 relative">
+                        <div>
                         <h2 className="text-center">{name}</h2>
                         {level && activeLevel(level.toLowerCase())}
+                        </div>
                         <p><span className="text-sm opacity-75">Timing</span> {`${startTime} - ${endTime}`}</p>
                         {trainer && <p><span className="text-sm opacity-75">Trainer</span> {trainer}</p>}
                         {fees && <p><span className="text-sm opacity-75">Fees</span> {`Rs.${fees}/${freq}`}</p>}
@@ -189,19 +191,19 @@ const Classes = ({ categories }) => {
                             Object.values(days).map(({day, active}) => <span className={`${active ? 'bg-green-200' : 'bg-[#637280]'} px-1.5`}>{day?.slice(0,3)}</span>)
                         }
                         </div>
-                        <input type="checkbox" className="absolute top-4 left-4 outline-none" onChange={(e) => checkClassHandler(e, classItem)}/>
+                        {/* <input type="checkbox" className="absolute top-4 left-4 outline-none" onChange={(e) => checkClassHandler(e, classItem)}/> */}
                     </div>)
                 })}
             </div>}
             <div className="flex justify-center mt-10">
                 {/* <button className="p-3 rounded-md bg-[#0f09275a] text-white">ENROLL</button> */}
-                <button 
+                {/* <button 
                     className={`px-3 py-1 mt-2 rounded-md bg-[#a290e95a] ${!Object.keys(checkedClasses).length && 'cursor-not-allowed bg-slate-700'}`}
                     onClick={() => showModal(showSelectedClasses)}
                     disabled={!Object.keys(checkedClasses).length}
                 >
                     ENROLL
-                </button>
+                </button> */}
             </div>
 
         </div>

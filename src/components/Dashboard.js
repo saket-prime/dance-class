@@ -40,6 +40,11 @@ const initalDaysState = {
     }
 };
 
+const initialModal = {
+    isOpen: false,
+    renderer: () => ''
+}
+
 const level = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 const freq = ['Month', 'Week', 'Session'];
 
@@ -47,7 +52,7 @@ const Dashboard = () => {
 
     const [user, setUser] = useState(null);
     const [days, setDays] = useState(initalDaysState);
-    const [modal, setModal] = useState(false);
+    const [modal, setModal] = useState(initialModal);
     const [categories, setCategories] = useState([]);
     const [expandedCategory, setExpandedCategory] = useState(-1);
     const [expandedClass, setExpandedClass] = useState(-1);
@@ -56,7 +61,10 @@ const Dashboard = () => {
     const [formUpdated, setFormUpdated] = useState(false);
 
     const addClass = () => {
-        setModal(true);
+        setModal({
+            isOpen: true,
+            renderer: addClassFormRenderer,
+        });
     }
 
     const onAddDay = (e, key) => {
@@ -133,14 +141,14 @@ const Dashboard = () => {
                                 </label>
                             })}
                         </div>
-                        <input type="text" placeholder="Trainer" className="p-2 rounded-md" id="trainer"/>
+                        <input type="text" placeholder="Trainer" className="p-2 rounded-md" id="trainer" required/>
                         <select className="p-2 rounded-md" id="level">
                             {level.map((l, index) => {
                                 return <option key={index} value={l}>{l}</option>
                             })}
                         </select>
                         <div className="flex items-center gap-2">
-                            <input type="number" placeholder="Fees" className="p-2 rounded-md" id="fees"/>
+                            <input type="number" placeholder="Fees" className="p-2 rounded-md" id="fees" required/>
                             <span className="text-white">per</span>
                             <select className="p-2 rounded-md" id="freq">
                                 {freq.map((f, index) => {
@@ -148,7 +156,7 @@ const Dashboard = () => {
                                 })}
                             </select>
                         </div>
-                        <select className="p-2 rounded-md" id="category">
+                        <select className="p-2 rounded-md" id="category" required>
                             <option value="0">Select Category</option>
                             {categories.map((c, index) => {
                                 return <option key={index} value={c.id}>{c.id}</option>
@@ -161,8 +169,15 @@ const Dashboard = () => {
         )
     }
 
+    const onTrainerUpdate = async (value, location) => {
+        const tempApplicationData = _.cloneDeep(applicationData);
+        _.set(tempApplicationData, location, value);
+        setApplicationData(tempApplicationData);
+        setFormUpdated(true);
+    }
+
     // a recursive formRenderer which reads from applicationData and if object creates a child form and if an array creates serial form (onChange of the form updates applicationData)
-    const applicationContentUpdateFormRenderer = (key, data, location) => {
+    const applicationContentUpdateFormRenderer = (key, data, location, content = false) => {
         location.push(key);
         if (Array.isArray(data)) {
             return <div>
@@ -236,14 +251,14 @@ const Dashboard = () => {
         } 
         setExpandedClass(index);
         setActiveCategoryUsers([]);
-        const userSnapshot = await getDocs(collection(firestore, "categories", category, "classes", classId, "users"));
+        // const userSnapshot = await getDocs(collection(firestore, "categories", category, "classes", classId, "users"));
         const users = [];
-        userSnapshot.docs.forEach(doc => {
-            users.push({
-                id: doc.id,
-                ...doc.data(),
-            });
-        });
+        // userSnapshot.docs.forEach(doc => {
+        //     users.push({
+        //         id: doc.id,
+        //         ...doc.data(),
+        //     });
+        // });
         setActiveCategoryUsers(users);
     }
 
@@ -256,18 +271,21 @@ const Dashboard = () => {
                 if (admins?.emails?.includes(user.email)) {
                     setUser(user);
                     const querySnapshot = await getDocs(collection(firestore, "categories"))
-                    const promises = querySnapshot.docs.map(async (doc) => {
+                    const promises = querySnapshot.docs.map(async (eachDoc) => {
                         const classes = [];
-                        const categorySnapshot = await getDocs(collection(firestore, "categories", doc.id, "classes"));
+                        const categoryData = await getDoc(doc(firestore, "categories", eachDoc.id));
+                        const trainers = categoryData.data()?.trainer || [];
+                        const categorySnapshot = await getDocs(collection(firestore, "categories", eachDoc.id, "classes"));
                         categorySnapshot.forEach((classDoc) => {
                             classes.push({
+                                trainers,
                                 id: classDoc.id,
                                 ...classDoc.data()
                             });
                         });
                         return {
-                            id: doc.id,
-                            ...doc.data(),
+                            id: eachDoc.id,
+                            ...eachDoc.data(),
                             classes,
                         };
                     });
@@ -288,18 +306,20 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen bg-black text-white sm:p-12 p-3 flex flex-col gap-3">
             {/* modal */}
-            {modal && <div className="fixed inset-0 bg-black bg-opacity-90 z-10 flex justify-center items-center text-white">
+            {modal.isOpen && <div className="fixed inset-0 bg-black bg-opacity-90 z-10 flex justify-center items-center text-white">
                 <div className="bg-gradient-to-tr from-[#55549D] to-[#120B2C] p-5 rounded-md mx-3 flex flex-col gap-2 relative">
-                    {addClassFormRenderer()}
-                    <button onClick={() => setModal(false)} className="absolute top-3 right-3 p-1 rounded-2xl bg-slate-700">
+                    {modal.renderer()}
+                    <button onClick={() => setModal(initialModal)} className="absolute top-3 right-3 p-1 rounded-2xl bg-slate-700">
                         <RxCross2 />
                     </button>
                 </div>
             </div>}
             <div className="w-full flex justify-between">
                 <h1 className="text-xl font-semibold">Dashboard for Admins</h1>
-                {!user ? <button onClick={singInWithGoogle} className="bg-green-50 text-black px-3 rounded-md font-semibold">SingIn</button> :
-                <button className="bg-green-50 text-black px-3 rounded-md font-semibold" onClick={addClass}>Add Class</button>}
+                {!user ? <button onClick={singInWithGoogle} className="bg-green-50 text-black px-3 rounded-md font-semibold">SingIn</button> : 
+                <div className="flex gap-3">
+                    <button className="bg-green-50 text-black px-3 rounded-md font-semibold" onClick={addClass}>Add Class</button>
+                </div>}
             </div>
             <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-semibold">Categories</h2>
@@ -315,6 +335,7 @@ const Dashboard = () => {
                                 </AccordionSummary>
                                 <AccordionDetails>
                                     <div className="flex flex-col gap-2">
+                                        <h3>Classes</h3>
                                         {
                                             category.classes.map(({id, name, level, fees, freq, startTime, endTime, days }, index) => {
                                                 if (name && startTime && endTime && days )
@@ -343,8 +364,8 @@ const Dashboard = () => {
                                                                 </div>
                                                                     <span>Fees: {fees} per {freq}</span>
                                                                     <div>
-                                                                        <h3 >Enrolled Users List:</h3>
-                                                                        {/* table for the enrolled user */}
+                                                                        {/* <h3 >Enrolled Users List:</h3>
+                                                                        {/* table for the enrolled user *
                                                                         <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                                                                             <thead className="text-xs text-white uppercase bg-slate-700 dark:text-gray-400">
                                                                                 <tr className="py-2">
@@ -368,13 +389,15 @@ const Dashboard = () => {
                                                                                     })
                                                                                 }
                                                                             </tbody>
-                                                                        </table>
+                                                                        </table> */}
                                                                     </div>
                                                             </AccordionDetails>
                                                     </Accordion>
                                                     )
                                             })
                                         }
+                                        <h3>Trainers</h3>
+                                        {applicationContentUpdateFormRenderer('trainer', category.trainers, [])}
                                     </div>
                                 </AccordionDetails>
                             </Accordion>
