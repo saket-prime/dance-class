@@ -11,18 +11,18 @@ const Banner = () => {
     const slides = [
         {   
             img: DanceImage,
-            title: "Enjoy Each Step Along The Way.",
-            description: "Learn To Dance With Style"
+            title: "Find your Beat",
+            description: "Dance"
         },
         {
             img: DanceImage,
-            title: "Enjoy Each Step Along The Way",
-            description: "Learn To Exercise With Style"
+            title: "Sweat. Smile. Repeat",
+            description: "Fitness"
         },
         {
             img: DanceImage,
-            title: "Enjoy Each Step Along The Way",
-            description: "Learn To Photograph With Style"
+            title: "Look good",
+            description: "Photography"
         }
     ]
     
@@ -72,7 +72,7 @@ const Banner = () => {
                     <div
                         className=" inline-flex bg-dancer1 bg-center bg-cover bg-blend-color-dodge sm:bg-gradient-to-r sm:to-[#1c1c24] sm:from-[#1b007a] h-screen w-full items-center"
                         key={index}
-                        style={{ backgroundColor: "#1c1c36",}  }
+                        style={{ backgroundColor: "#000000",}  }
                     >
                         <div className='hidden sm:w-1/2 sm:flex sm:items-center'>
                             <img src={slide.img} className=' sm:max-w-xl' />
@@ -89,14 +89,14 @@ const Banner = () => {
                                     </span>
                                 </p>
                             </div>
-                            <div className=' absolute ml-20 top-[90%] flex items-center gap-1' >
+                            <!--<div className=' absolute ml-20 top-[90%] flex items-center gap-1' >
                                 <p className='p-3 text-xs'> FOLLOW US </p>
                                 <hr className='w-10' />
                                 <div className='flex gap-3 p-3'>
                                     <p><FaFacebook /></p>
                                     <p><FaInstagram /></p>
                                     <p><FaYoutube /></p>
-                                </div>
+                                </div>-->
                             </div>
                         </div>
                     </div>

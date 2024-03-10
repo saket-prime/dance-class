@@ -55,10 +55,9 @@ const ContactUs = () => {
     <div className='h-screen bg-[#1c1c36] bg-dancer1 bg-center bg-cover bg-blend-color-dodge sm:bg-gradient-to-r sm:to-[#131324] sm:from-[#120b2c] relative flex max-sm:flex-col-reverse justify-center gap-10 snap-start' id='contact'>
         <div className='sm:w-1/2 flex items-center justify-center'>
             <div>
-                <p className='p-2 text-2xl max-sm:text-base tracking-widest font-normal'>CONTACT INFORMATION</p>
-                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xl font-light'><FaPhone color='#55549D'/> +202 555 0789</p>
-                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><AiOutlineMail color='#55549D' /> dance@email.com</p>
-                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><GrLocation color='#55549D' /> 218 Pegg Rd, Morris, New York(NY), 13808 </p>
+                <p className='p-2 text-2xl max-sm:text-base tracking-widest font-normal'>CONTACT US</p>
+                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xl font-light'><FaPhone color='#55549D'/> +91 7738 301628</p>
+                <p className='flex items-center gap-5 p-2 max-sm:text-sm text-xxl font-light'><GrLocation color='#55549D' /> D4 (Podium Level), Tower D, Panchshil Towers, Kharadi, Pune </p>
             </div>    
         </div>
         <div className='sm:w-1/2 self-center flex justify-center flex-col items-center'>
