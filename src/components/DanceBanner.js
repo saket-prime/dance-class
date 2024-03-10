@@ -7,22 +7,22 @@ import {RxDotFilled} from 'react-icons/rx'
 const DanceBanner = () => {
   
   const slides = [
-    {
-      img: DanceImage,
-      title: "Enjoy Each Step Along The Way.",
-      description: "Learn To Dance With Style"
+    {   
+        img: DanceImage,
+        title: "Find your Beat",
+        description: "Dance"
     },
     {
-      img: DanceImage2,
-      title: "Enjoy Each Step Along The Way",
-      description: "Learn To Exercise With Style"
+        img: DanceImage,
+        title: "Sweat. Smile. Repeat",
+        description: "Fitness"
     },
     {
-      img: DanceImage,
-      title: "Enjoy Each Step Along The Way",
-      description: "Learn To Photograph With Style"
+        img: DanceImage,
+        title: "Look good",
+        description: "Photography"
     }
-  ]
+]
   
   const classesRef = useRef(null);
   
@@ -55,7 +55,7 @@ const DanceBanner = () => {
   
   return (
     
-    <div id ="home"className='h-screen bg-[#1c1c36] bg-dancer1 bg-center bg-cover bg-blend-color-dodge sm:bg-gradient-to-r sm:to-[#1c1c24] sm:from-[#1b007a] items-center relative flex justify-center group snap-start'>
+    <div id ="home"className='h-screen bg-[#1c1c36] bg-dancer1 bg-center bg-cover bg-blend-color-dodge sm:bg-gradient-to-r sm:to-[#000000] sm:from-[#1b007a] items-center relative flex justify-center group snap-start'>
       <div className='hidden sm:w-1/2 sm:flex sm:items-center'>
           <img src={slides[currentIndex].img} className='sm: max-w-xl'/>
       </div>
@@ -70,15 +70,6 @@ const DanceBanner = () => {
               <div className='cursor-pointer'><FaChevronRight /></div>  
             </span>
           </p>
-        </div>
-        <div className = 'sm:ml-20 absolute bottom-4 flex items-center gap-1' >
-          <p className='p-3 text-xs'> FOLLOW US </p>
-          <hr className='w-10'/>
-          <div className='flex gap-3 p-3'>    
-            <p><FaFacebook /></p>
-            <p><FaInstagram /></p>
-            <p><FaYoutube /></p>
-          </div>
         </div>
       </div>
       <div className='sm:hidden group-hover:block absolute top-[50%] -translate-x-0 translate-y-[-50%] left-5 sm:text-2xl rounded-dull p-2 bg-black/20 text-white cursor-pointer'>
